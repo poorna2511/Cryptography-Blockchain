@@ -1,5 +1,5 @@
 # Cryptography-Blockchain
-simple application on hashing and blockchain
+simple application on hashing and blockchain using PyQt5 and HashLib libraries
 
 Hashing:
 
