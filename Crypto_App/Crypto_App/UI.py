@@ -9,18 +9,20 @@ import hashlib
 
 # other libs
 import sys
- 
+
 # creating main window class
 class MainWindow(QTabWidget):
 
     def __init__(self):
         super().__init__()
 
-        self.w_width = 600
-        self.w_height = 400
+        self.w_width = 750
+        self.w_height = 500
         self.setGeometry(100, 100, self.w_width, self.w_height)
 
         self.listOfBlocks = []
+
+        self.updateBlockchain = True
 
         self.UiComponents()
         self.show()
@@ -56,8 +58,8 @@ class MainWindow(QTabWidget):
     def CreateNewBlock(self):
 
         block = QWidget()
-        block.setFixedWidth(250)
-        block.setFixedHeight(200)
+        block.setFixedWidth(300)
+        block.setFixedHeight(300)
         block.setStyleSheet("background-color: lightblue")
 
         virtLayout = QVBoxLayout()
@@ -70,59 +72,100 @@ class MainWindow(QTabWidget):
         numberlabel.setText("Block #" + str(heightofBlockchain + 1))
         virtLayout.addWidget(numberlabel)
 
-        #data
+        #data editor
         dataEditor = QTextEdit()
         dataEditor.setStyleSheet("color: white;  background-color: black")
         virtLayout.addWidget(dataEditor)
 
-        #block number
+        #rpev block label
         prevBlockHashlabel = QLabel()
-        prevBlockHashlabel.setText("previous block hash")
+        prevBlockHashlabel.setText("Previous block hash")
         virtLayout.addWidget(prevBlockHashlabel)
 
-        #previous block hash
+        #previous block hash editor
         prevBlockHashEditor = QTextEdit()
         prevBlockHashEditor.setStyleSheet("color: white;  background-color: black")
         prevBlockHashEditor.setReadOnly(True)
         virtLayout.addWidget(prevBlockHashEditor)
 
-        #block number
+        #nonce label
+        nonceLabel = QLabel()
+        nonceLabel.setText("Nonce")
+        virtLayout.addWidget(nonceLabel)
+
+        #nonce spin
+        nonceSpin = QSpinBox()
+        nonceSpin.setStyleSheet("color: white;  background-color: black")
+        nonceSpin.setMinimum(0)
+        nonceSpin.setMaximum(1e10)
+        nonceSpin.setValue(0)
+        nonceSpin.setSingleStep(1)
+        nonceSpin.setWrapping(True)
+        virtLayout.addWidget(nonceSpin)
+
+        #target label
+        targetLabel = QLabel()
+        targetLabel.setText("Target Value")
+        virtLayout.addWidget(targetLabel)
+
+        #target spin
+        targetSpin = QSpinBox()
+        targetSpin.setStyleSheet("color: white;  background-color: black")
+        targetSpin.setMinimum(0)
+        targetSpin.setMaximum(10)
+        targetSpin.setValue(1)
+        targetSpin.setSingleStep(1)
+        targetSpin.setWrapping(True)
+        virtLayout.addWidget(targetSpin)
+               
+        mineButton = QPushButton("Mine")
+        mineButton.setStyleSheet("color: black;  background-color: white")
+        virtLayout.addWidget(mineButton)
+
+        #curr block hash label
         currBlockHashlabel = QLabel()
-        currBlockHashlabel.setText("currrent block hash")
+        currBlockHashlabel.setText("Currrent block hash")
         virtLayout.addWidget(currBlockHashlabel)
 
-        #current black hash
+        #current black hash editor
         currBlockHashEditor = QTextEdit()
         currBlockHashEditor.setStyleSheet("color: white;  background-color: black")
         currBlockHashEditor.setReadOnly(True)
         virtLayout.addWidget(currBlockHashEditor)
 
-        self.listOfBlocks.append([dataEditor, prevBlockHashEditor, currBlockHashEditor])
+        self.listOfBlocks.append({"data":dataEditor, "prevBlockHashEditor":prevBlockHashEditor,  "nonceSpin":nonceSpin,
+                                 "targetSpin":targetSpin, "currBlockHashEditor":currBlockHashEditor})
 
         if (heightofBlockchain == 0):
 
             strAlgoSelected = self.hashingAlgoForBC.currentText()
 
             if(strAlgoSelected == "sha256"):
-                prevBlockHashEditor.setText("0"*32)
+                prevBlockHashEditor.setText("0" * 32)
 
             if(strAlgoSelected == "sha384"):
-                prevBlockHashEditor.setText("0"*48)
+                prevBlockHashEditor.setText("0" * 48)
 
             if(strAlgoSelected == "sha224"):
-                prevBlockHashEditor.setText("0"*28)
+                prevBlockHashEditor.setText("0" * 28)
 
             if(strAlgoSelected == "sha512"):
-                prevBlockHashEditor.setText("0"*64)
+                prevBlockHashEditor.setText("0" * 64)
         else:
-            strPrevHash = self.listOfBlocks[heightofBlockchain - 1][2].toPlainText()
+            strPrevHash = self.listOfBlocks[heightofBlockchain - 1]["currBlockHashEditor"].toPlainText()
             prevBlockHashEditor.setText(strPrevHash)
 
+        #allocating the block number so that we can know who is the sender
         dataEditor.blockNum = heightofBlockchain + 1
+        nonceSpin.blockNum = heightofBlockchain + 1
         prevBlockHashEditor.blockNum = heightofBlockchain + 1
+        mineButton.blockNum = heightofBlockchain + 1
 
+        #connect
         dataEditor.textChanged.connect(self.UpdateBlockchain)
+        nonceSpin.valueChanged.connect(self.UpdateBlockchain)
         prevBlockHashEditor.textChanged.connect(self.UpdateBlockchain)
+        mineButton.clicked.connect(self.Mine) 
 
         #return the created block
         return block
@@ -132,11 +175,12 @@ class MainWindow(QTabWidget):
         target = self.sender()
         blockNumber = target.blockNum
 
-        dataEditor = self.listOfBlocks[blockNumber - 1][0]
-        prevBlockHashEditor = self.listOfBlocks[blockNumber - 1][1]
-        currBlockHashEditor = self.listOfBlocks[blockNumber - 1][2]
+        dataEditor = self.listOfBlocks[blockNumber - 1]["data"]
+        prevBlockHashEditor = self.listOfBlocks[blockNumber - 1]["prevBlockHashEditor"]
+        nonceSpin = self.listOfBlocks[blockNumber - 1]["nonceSpin"]
+        currBlockHashEditor = self.listOfBlocks[blockNumber - 1]["currBlockHashEditor"]
 
-        strDataToHash = str(blockNumber) + dataEditor.toPlainText() + prevBlockHashEditor.toPlainText()
+        strDataToHash = str(blockNumber) + dataEditor.toPlainText() + prevBlockHashEditor.toPlainText() + str(nonceSpin.value())
 
         if strDataToHash == "" or dataEditor.toPlainText() == "":
             currBlockHashEditor.setText("")
@@ -156,10 +200,51 @@ class MainWindow(QTabWidget):
         strOutputHash = result.hexdigest()
         currBlockHashEditor.setText(strOutputHash)
 
-        if(blockNumber < len(self.listOfBlocks)):
-            nextBlocksPrevHashEditor = self.listOfBlocks[blockNumber][1]
+        if(blockNumber < len(self.listOfBlocks) and self.updateBlockchain == True):
+            nextBlocksPrevHashEditor = self.listOfBlocks[blockNumber]["prevBlockHashEditor"]
             nextBlocksPrevHashEditor.setText(strOutputHash)
+            
+    def AddANewBlock(self):
 
+        block = self.CreateNewBlock()
+
+        self.horizLayout.addWidget(block)
+
+        separator = QSplitter()
+        separator.setMinimumWidth(10)
+        self.horizLayout.addWidget(separator)
+               
+    def Mine(self):
+        target = self.sender()
+        blockNumber = target.blockNum
+
+        currBlockTargetSpin = self.listOfBlocks[blockNumber - 1]["targetSpin"]
+        currBlockNonceSpin = self.listOfBlocks[blockNumber - 1]["nonceSpin"]
+        currBlockHashEditor = self.listOfBlocks[blockNumber - 1]["currBlockHashEditor"]
+                
+        strTarget = '0' * (currBlockTargetSpin.value())
+
+        nonce = 0
+        self.updateBlockchain = False
+        miningSuccesful = False
+
+        while nonce < 1e10:
+
+            currBlockNonceSpin.setValue(nonce)
+            strBlockHash = currBlockHashEditor.toPlainText()
+
+            if strBlockHash.startswith(strTarget) == True:
+                miningSuccesful = True
+                break                
+
+            nonce = nonce + 1
+
+        self.updateBlockchain = True
+        self.UpdateBlockchain()
+
+        if miningSuccesful == False:
+            msg.setText("Mining failed. Suitable has not found")
+        
     def InitializeBlockchainTab(self):
 
         virtLayout1 = QVBoxLayout()
@@ -196,16 +281,6 @@ class MainWindow(QTabWidget):
 
         #connect
         addBlockButton.clicked.connect(self.AddANewBlock) 
-
-    def AddANewBlock(self):
-
-        block = self.CreateNewBlock()
-
-        self.horizLayout.addWidget(block)
-
-        separator = QSplitter()
-        separator.setMinimumWidth(10)
-        self.horizLayout.addWidget(separator)
 
     # method for components
     def UiComponents(self):
