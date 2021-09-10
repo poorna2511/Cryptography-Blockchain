@@ -1,12 +1,14 @@
 # Cryptography-Blockchain
 simple application on hashing and blockchain using PyQt5 and HashLib libraries
 
-Hashing:
+**Hashing:**
+
 In this application use can select the type of hash function and to be used for hashing the input text
 
 ![image](https://user-images.githubusercontent.com/89305345/131094559-6059b4d3-20bd-47cd-874c-d78bbc6ae1c5.png)
 
-Simple Blockchain:
+**Simple Blockchain:**
+
 In this application we can see the working of simple blockchain as a demo.
 In applicaiton user can add blocks and enter the transaction data in each of them.
 And also user can set the difficulty target and nonce for the mining with random trials or
