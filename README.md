@@ -7,4 +7,5 @@ Hashing:
 
 Simple Blockchain:
 
-![image](https://user-images.githubusercontent.com/89305345/131095156-c759e320-6cbe-4559-8d6e-1aae11828ec6.png)
+![image](https://user-images.githubusercontent.com/89305345/132849910-c0f0e9e9-9137-4563-8ddf-3b0e59850e37.png)
+
